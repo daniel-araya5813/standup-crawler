@@ -25,12 +25,12 @@ def get_event_detail_llm_strategy() -> LLMExtractionStrategy:
         api_token=os.getenv("GROQ_API_KEY"),
         schema=Venue.model_json_schema(),
         extraction_type="schema",
-        instruction=(
-            "Extract a single event object with the following fields: 'title', 
+        instruction="""
+            Extract a single event object with the following fields: 'title', 
 'venue', 'summary', '
             address', 'email', 'city', 'province', 'producers', 'event_link', and 
-'date'."
-        ),
+'date'.
+""",
         input_format="markdown",
         verbose=True,
     )
@@ -47,7 +47,7 @@ def get_browser_config() -> BrowserConfig:
     )
 
 
-async def extract_event_details_from_link(
+async def scrape_event_details_from_url(
     crawler: AsyncWebCrawler,
     url: str,
     session_id: str,
