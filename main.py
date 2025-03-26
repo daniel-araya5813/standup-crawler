@@ -1,5 +1,6 @@
 import asyncio
 
+from datetime import datetime
 from crawl4ai import AsyncWebCrawler
 from dotenv import load_dotenv
 
@@ -14,6 +15,8 @@ from utils.scraper_utils import (
 )
 
 load_dotenv()
+START_PAGE = 1
+END_PAGE = 2
 
 
 async def crawl_venues():
@@ -26,7 +29,7 @@ async def crawl_venues():
     session_id = "venue_crawl_session"
 
     # Initialize state variables
-    page_number = 1
+    page_number = START_PAGE
     all_venues = []
     seen_names = set()
 
@@ -45,6 +48,9 @@ async def crawl_venues():
                 REQUIRED_KEYS,
                 seen_names,
             )
+            if page_number > END_PAGE:
+                print("Reached END_PAGE limit. Ending crawl.")
+                break
 
             if no_results_found:
                 print("No more venues found. Ending crawl.")
@@ -63,8 +69,10 @@ async def crawl_venues():
 
     # Save the collected venues to a CSV file
     if all_venues:
-        save_venues_to_csv(all_venues, "complete_venues.csv")
-        print(f"Saved {len(all_venues)} venues to 'complete_venues.csv'.")
+        date_str = datetime.now().strftime("%Y-%m-%d")
+        filename = f"eventbrite_p{START_PAGE}_to_{END_PAGE}_{date_str}.csv"
+        save_venues_to_csv(all_venues, filename)
+        print(f"Saved {len(all_venues)} venues to '{filename}'.")
     else:
         print("No venues were found during the crawl.")
 
