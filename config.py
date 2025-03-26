@@ -1,6 +1,7 @@
 BASE_URL = "https://www.eventbrite.ca/d/canada--ontario/stand-up-comedy/?page="
 
-CSS_SELECTOR = ".search-event-card-wrapper"
+#CSS_SELECTOR = ".search-event-card-wrapper"
+CSS_SELECTOR = "div[data-testid='event-card']"
 
 REQUIRED_KEYS = [
     "title",
