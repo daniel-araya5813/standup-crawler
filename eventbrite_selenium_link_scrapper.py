@@ -8,6 +8,7 @@ from selenium.common.exceptions import TimeoutException, WebDriverException
 import argparse
 import csv
 import logging
+import random
 import time
 
 class EventbriteScraper:
@@ -53,7 +54,7 @@ class EventbriteScraper:
                     self.driver.get(url)
                     
                     # Wait for page to load
-                    time.sleep(delay)  # Increased wait time
+                    time.sleep(random.uniform(delay, delay + 3))  # Random wait time delays
                     
                     # Take screenshot for debugging
                     self.driver.save_screenshot(f"screenshots/{run_date}_page_{i}_screenshot.png")
