@@ -1,3 +1,4 @@
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -37,7 +38,7 @@ class EventbriteScraper:
             service_obj = service.Service(ChromeDriverManager().install())
             self.driver = webdriver.Chrome(service=service_obj, options=chrome_options)
 
-    def scrape_multiple_pages(self, base_url, start=1, end=3):
+    def scrape_multiple_pages(self, base_url, start=1, end=3, run_date="run"):
         logging.info(f"📄 Starting link scrape from page {start} to {end}")
         all_urls = []
         
@@ -53,7 +54,7 @@ class EventbriteScraper:
                 time.sleep(5)  # Increased wait time
                 
                 # Take screenshot for debugging
-                self.driver.save_screenshot(f"page_{i}_screenshot.png")
+                self.driver.save_screenshot(f"screenshots/{run_date}_page_{i}_screenshot.png")
                 
                 # Try to find event links with multiple strategies
                 try:
@@ -77,13 +78,13 @@ class EventbriteScraper:
             except Exception as e:
                 logging.error(f"❌ Failed to extract page {i}: {e}")
                 # Optional: Additional logging or screenshot
-                self.driver.save_screenshot(f"error_page_{i}_screenshot.png")
+                self.driver.save_screenshot(f"screenshots/{run_date}_error_page_{i}_screenshot.png")
         
         return list(set(all_urls))  # De-duplicate
 
-    def save_to_csv(self, urls, filename="event_links.csv"):
-        logging.info(f"💾 Saving {len(urls)} links to {filename}")
-        with open(filename, mode="w", newline="", encoding="utf-8") as file:
+    def save_to_csv(self, urls, filename="event_links.csv", run_date="run"):
+        logging.info(f"💾 Saving {len(urls)} links to data/{run_date}_{filename}")
+        with open(f"data/{run_date}_{filename}", mode="w", newline="", encoding="utf-8") as file:
             writer = csv.DictWriter(file, fieldnames=["event_link"])
             writer.writeheader()
             for url in urls:
@@ -97,16 +98,17 @@ if __name__ == "__main__":
         level=logging.INFO, 
         format="%(asctime)s | %(levelname)s | %(message)s",
         handlers=[
-            logging.FileHandler("scraper.log"),
+            logging.FileHandler(f"logs/scraper_{run_date}.log"),
             logging.StreamHandler()
         ]
     )
     
     try:
+        run_date = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         scraper = EventbriteScraper(headless=False)  # Set to False for debugging
         base_url = "https://www.eventbrite.ca/d/canada--ontario/stand-up-comedy/"
-        links = scraper.scrape_multiple_pages(base_url, start=1, end=3)
-        scraper.save_to_csv(links)
+        links = scraper.scrape_multiple_pages(base_url, start=1, end=3, run_date=run_date)
+        scraper.save_to_csv(links, filename="event_links.csv", run_date=run_date)
         scraper.close()
         logging.info("🎉 Done scraping event links.")
     except Exception as e:

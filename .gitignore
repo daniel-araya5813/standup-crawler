@@ -1,19 +1,20 @@
 #Ignore environment variables
 .env
 
-#Ignore the Weblink Files
-*.csv
+#Ignore the Weblink Folder
+/data/
 
 #Ignore the Python Bytecode Files
 __pycache__
 *.pyc 
 
-#Ignore the Screenshots
-*.png
+#Ignore the Screenshot Folder
+/screenshots/
+
 
 #Ignore the VS Code Workspace Settings
 .vscode/
 
-#Ignore the logs
-*.log
+#Ignore the log Folder
+/logs/
 
