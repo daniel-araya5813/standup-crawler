@@ -39,19 +39,48 @@ class EventbriteFinder:
         Args:
             headless (bool): Whether to show the browser window (False) or hide it (True)
         """
+        # Get standard chrome options (with experimental options)
         chrome_options = create_chrome_options(headless)
         
         # Try to use undetected_chromedriver if available, otherwise fallback to standard
         try:
             import undetected_chromedriver as uc
-            self.driver = uc.Chrome(options=chrome_options)
+            
+            # For undetected_chromedriver, we need to create a clean Options object
+            # without the experimental options that cause problems
+            uc_options = uc.ChromeOptions()
+            
+            # Copy over the regular arguments from our standard options
+            for argument in chrome_options.arguments:
+                uc_options.add_argument(argument)
+            
+            # Now use these cleaned options with undetected_chromedriver
+            self.driver = uc.Chrome(options=uc_options)
+            
+            # Add JavaScript-based anti-detection
+            self.driver.execute_script(
+                "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+            )
+            
             logging.info("Using undetected_chromedriver for better anti-detection")
+            
         except ImportError:
-            # Fallback to standard WebDriver
+            # Fallback to standard WebDriver (with all experimental options intact)
             from selenium.webdriver.chrome import service
             from webdriver_manager.chrome import ChromeDriverManager
+            
             service_obj = service.Service(ChromeDriverManager().install())
             self.driver = webdriver.Chrome(service=service_obj, options=chrome_options)
+            
+            # Add additional JavaScript-based anti-detection for standard ChromeDriver
+            self.driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+                'source': '''
+                    Object.defineProperty(navigator, 'webdriver', {
+                        get: () => undefined
+                    })
+                '''
+            })
+            
             logging.info("Using standard ChromeDriver")
 
     def search_multiple_pages(self, base_url, start=1, end=3, run_date="run", delay=5, retry=1):
