@@ -34,7 +34,7 @@ from Main_Settings import REQUIRED_KEYS
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Collect detailed information about comedy events")
-    parser.add_argument("--input", type=str, help="Path to input CSV file with event links")
+    parser.add_argument("input_csv", nargs="?", type=str, help="Name or path to CSV file with event links")
     parser.add_argument("--output", type=str, help="Path to output CSV file for event details")
     parser.add_argument("--start-index", type=int, default=0, 
                       help="Starting index in the links list (for resuming)")
@@ -79,6 +79,28 @@ def read_event_links(csv_file):
         list: List of event links
     """
     links = []
+    
+    # If no file specified, find the newest one
+    if not csv_file:
+        csv_file = find_newest_file("Collected_Data/Discovered_Event_Websites", "event_links")
+        if not csv_file:
+            logging.error("❌ No input file specified and no event_links file found")
+            return []
+    else:
+        # Check if input is a filename or full path
+        if os.path.exists(csv_file):
+            pass  # Use as is
+        elif os.path.exists(f"Collected_Data/Discovered_Event_Websites/{csv_file}"):
+            csv_file = f"Collected_Data/Discovered_Event_Websites/{csv_file}"
+        else:
+            # Try finding a file containing the specified name
+            found_file = find_newest_file("Collected_Data/Discovered_Event_Websites", csv_file)
+            if found_file:
+                csv_file = found_file
+            else:
+                logging.error(f"❌ Could not find input file: {csv_file}")
+                return []
+    
     logging.info(f"📂 Reading event links from: {csv_file}")
     
     try:
@@ -231,16 +253,7 @@ async def main():
     logging.info("🚀 Starting Event Detail Collection (Step 2)")
     
     # Determine input file
-    input_file = args.input
-    if not input_file:
-        # Find most recent event links file if not specified
-        input_file = find_newest_file("Collected_Data/Discovered_Event_Websites", "event_links")
-        if not input_file:
-            logging.error("❌ No input file specified and no event_links file found")
-            print("❌ ERROR: No event links file found. Please run Step 1 first.")
-            return 1
-    
-    # Read event links
+    input_file = args.input_csv
     links = read_event_links(input_file)
     if not links:
         print("❌ ERROR: No event links found in the input file.")
